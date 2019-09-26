@@ -1,0 +1,40 @@
+#!/usr/bin/make -f
+
+BUILDDIR = build_dir
+
+# secondly called by launchpad
+build:
+ifeq ($(TRAVIS),)
+	echo "Not travis, hopefully launchpad. Clonning submodules manually..."
+	rm -rf cpp/{*,.*}
+	rm -rf cpp
+	git clone https://git.launchpad.net/~dqrobotics-dev/dqrobotics/+git/cpp cpp
+	rm -rf dropbox/{*,.*}
+	rm -rf dropbox
+	mkdir -p dropbox/json11
+	git clone https://git.launchpad.net/~dqrobotics-dev/dqrobotics/+git/dropbox-json11 dropbox/json11
+else
+	echo "Travis detected, skipping manual submodule load"
+endif
+	mkdir $(BUILDDIR);
+	cd $(BUILDDIR); cmake -DCMAKE_CXX_FLAGS="-fdebug-prefix-map=$(shell pwd)/src/=/usr/src/ -fdebug-prefix-map=$(shell pwd)/include/=/usr/include/" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=../debian/tmp/usr ..
+	make -C $(BUILDDIR) 
+
+# thirdly called by launchpad
+binary: binary-indep binary-arch
+
+binary-indep:
+	# nothing to be done
+
+binary-arch:
+	cd $(BUILDDIR); cmake -P cmake_install.cmake
+	mkdir -p debian/tmp/DEBIAN
+	dpkg-gencontrol -plibdqrobotics-interface-json11
+	dpkg --build debian/tmp ..
+
+# firstly called by launchpad
+clean:
+	rm -f build
+	rm -rf $(BUILDDIR)
+
+.PHONY: binary binary-arch binary-indep clean
