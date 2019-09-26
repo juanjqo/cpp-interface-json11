@@ -1,12 +1,12 @@
-Source: libdqrobotics-interface-vrep
+Source: libdqrobotics-interface-json11
 Section: devel
 Priority: optional
 Maintainer: Murilo Marinho <murilo@nml.t.u-tokyo.ac.jp>
 Build-Depends: cmake, libeigen3-dev, git
 Homepage: https://dqrobotics.github.io/
 
-Package: libdqrobotics-interface-vrep
+Package: libdqrobotics-interface-json11
 Architecture: any
 Depends: libdqrobotics
-Description: DQ Robotics interface with V-REP
- The dual quaternion robotics library interface with V-REP.
+Description: DQ Robotics interface with json11
+ The dual quaternion robotics library interface with json11.
