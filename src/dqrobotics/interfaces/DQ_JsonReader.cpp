@@ -1,3 +1,25 @@
+/**
+(C) Copyright 2019 DQ Robotics Developers
+
+This file is part of DQ Robotics.
+
+    DQ Robotics is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    DQ Robotics is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with DQ Robotics.  If not, see <http://www.gnu.org/licenses/>.
+
+Contributors:
+- Murilo M. Marinho        (murilo@nml.t.u-tokyo.ac.jp)
+*/
+
 #include <dqrobotics/interfaces/DQ_JsonReader.h>
 
 #include <json11.hpp>
@@ -8,13 +30,6 @@
 #include<string>
 #include<exception>
 #include<vector>
-
-//Usage example
-//int main(void)
-//{
-//    DQ_robotics::DQ_SerialManipulator a = DQ_robotics::DQ_JsonReader::get_serial_manipulator_from_json("/home/murilo/git/dqrobotics/cpp-interface-json11/robot.json");
-//    return 1;
-//}
 
 namespace DQ_robotics
 {
@@ -51,7 +66,12 @@ DQ_SerialManipulator DQ_JsonReader::get_serial_manipulator_from_json(const std::
     }
     json11::Json parsed_json = json11::Json::parse(str, error);
     if(error != "")
-        throw std::runtime_error("Json parse error");
+        throw std::runtime_error("Json parse error: " + error);
+
+    //Type
+    std::string type = parsed_json["type"].string_value();
+    if(type != "DQ_SerialManipulator")
+        throw std::runtime_error("get_serial_manipulator_from_json is only compatible with DQ_SerialManipulator and not " + type);
 
     //ANGLE MODE
     std::string angle_mode_str = parsed_json["angle_mode"].string_value();
