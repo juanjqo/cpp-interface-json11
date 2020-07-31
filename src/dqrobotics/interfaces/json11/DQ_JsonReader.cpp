@@ -29,6 +29,7 @@ Contributors:
 */
 
 #include <dqrobotics/interfaces/DQ_JsonReader.h>
+#include <dqrobotics/utils/DQ_Math.h>
 
 #include <json11.hpp>
 
@@ -42,27 +43,7 @@ Contributors:
 namespace DQ_robotics
 {
 
-VectorXd get_eigen_vector_from_json_vector(const std::vector<json11::Json>& json_vector)
-{
-    VectorXd eigen_vector(json_vector.size());
-    for(int i=0;i<json_vector.size();i++)
-    {
-        eigen_vector(i) = json_vector[i].number_value();
-    }
-    return eigen_vector;
-}
-
-double d2r(const double &d)
-{
-    return ((M_PI*d)/180.0);
-}
-
-Eigen::VectorXd d2r(const Eigen::VectorXd& indegrees)
-{
-    return indegrees*(M_PI/180.0);
-}
-
-DQ_SerialManipulator DQ_JsonReader::get_serial_manipulator_from_json(const std::string &file)
+json11::Json parse_json(const std::string& file)
 {
     std::string error;
     std::ifstream f(file); //taking file as inputstream
@@ -75,6 +56,32 @@ DQ_SerialManipulator DQ_JsonReader::get_serial_manipulator_from_json(const std::
     json11::Json parsed_json = json11::Json::parse(str, error);
     if(error != "")
         throw std::runtime_error("Json parse error: " + error);
+    return parsed_json;
+}
+
+VectorXd get_eigen_vectorxd_from_json_vector(const std::vector<json11::Json>& json_vector)
+{
+    VectorXd eigen_vector(json_vector.size());
+    for(int i=0;i<json_vector.size();i++)
+    {
+        eigen_vector(i) = json_vector[i].number_value();
+    }
+    return eigen_vector;
+}
+
+VectorXi get_eigen_vectorxi_from_json_vector(const std::vector<json11::Json>& json_vector)
+{
+    VectorXi eigen_vector(json_vector.size());
+    for(int i=0;i<json_vector.size();i++)
+    {
+        eigen_vector(i) = json_vector[i].int_value();
+    }
+    return eigen_vector;
+}
+
+DQ_SerialManipulator DQ_JsonReader::get_serial_manipulator_from_json(const std::string &file)
+{
+    json11::Json parsed_json = parse_json(file);
 
     //Type
     std::string type = parsed_json["type"].string_value();
@@ -94,17 +101,17 @@ DQ_SerialManipulator DQ_JsonReader::get_serial_manipulator_from_json(const std::
     std::string convention = parsed_json["convention"].string_value();
 
     //THETA
-    VectorXd theta_vec = get_eigen_vector_from_json_vector(parsed_json["theta"].array_items());
+    VectorXd theta_vec = get_eigen_vectorxd_from_json_vector(parsed_json["theta"].array_items());
     if(angle_mode_degree)
-        theta_vec = d2r(theta_vec);
+        theta_vec = deg2rad(theta_vec);
     //D
-    VectorXd d_vec = get_eigen_vector_from_json_vector(parsed_json["d"].array_items());
+    VectorXd d_vec = get_eigen_vectorxd_from_json_vector(parsed_json["d"].array_items());
     //A
-    VectorXd a_vec = get_eigen_vector_from_json_vector(parsed_json["a"].array_items());
+    VectorXd a_vec = get_eigen_vectorxd_from_json_vector(parsed_json["a"].array_items());
     //ALPHA
-    VectorXd alpha_vec = get_eigen_vector_from_json_vector(parsed_json["alpha"].array_items());
+    VectorXd alpha_vec = get_eigen_vectorxd_from_json_vector(parsed_json["alpha"].array_items());
     if(angle_mode_degree)
-        alpha_vec = d2r(alpha_vec);
+        alpha_vec = deg2rad(alpha_vec);
 
     MatrixXd dh_matrix(4,theta_vec.size());
     dh_matrix << theta_vec.transpose(),
@@ -113,19 +120,78 @@ DQ_SerialManipulator DQ_JsonReader::get_serial_manipulator_from_json(const std::
             alpha_vec.transpose();
 
     //LOWER LIMIT
-    VectorXd lower_vec = get_eigen_vector_from_json_vector(parsed_json["lower_q_limit"].array_items());
+    VectorXd lower_vec = get_eigen_vectorxd_from_json_vector(parsed_json["lower_q_limit"].array_items());
     if(angle_mode_degree)
-        lower_vec = d2r(lower_vec);
+        lower_vec = deg2rad(lower_vec);
     //UPPER LIMIT
-    VectorXd upper_vec = get_eigen_vector_from_json_vector(parsed_json["upper_q_limit"].array_items());
+    VectorXd upper_vec = get_eigen_vectorxd_from_json_vector(parsed_json["upper_q_limit"].array_items());
     if(angle_mode_degree)
-        upper_vec = d2r(upper_vec);
+        upper_vec = deg2rad(upper_vec);
 
     DQ_SerialManipulator serial_manipulator(dh_matrix, convention);
     serial_manipulator.set_lower_q_limit(lower_vec);
     serial_manipulator.set_upper_q_limit(upper_vec);
 
     return serial_manipulator;
+}
+
+DQ_SerialManipulatorDH DQ_JsonReader::get_serial_manipulator_dh_from_json(const std::string &file)
+{
+    json11::Json parsed_json = parse_json(file);
+
+    //Type
+    std::string type = parsed_json["type"].string_value();
+    if(type != "DQ_SerialManipulator")
+        throw std::runtime_error("get_serial_manipulator_from_json is only compatible with DQ_SerialManipulator and not " + type);
+
+    //ANGLE MODE
+    std::string angle_mode_str = parsed_json["angle_mode"].string_value();
+    bool angle_mode_degree;
+    if(angle_mode_str == "degree")
+        angle_mode_degree = true;
+    else if(angle_mode_str == "rad")
+        angle_mode_degree = false;
+    else
+        throw std::runtime_error("Unable to decode angle_mode");
+
+    std::string convention = parsed_json["convention"].string_value();
+
+    //THETA
+    VectorXd theta_vec = get_eigen_vectorxd_from_json_vector(parsed_json["theta"].array_items());
+    if(angle_mode_degree)
+        theta_vec = deg2rad(theta_vec);
+    //D
+    VectorXd d_vec = get_eigen_vectorxd_from_json_vector(parsed_json["d"].array_items());
+    //A
+    VectorXd a_vec = get_eigen_vectorxd_from_json_vector(parsed_json["a"].array_items());
+    //ALPHA
+    VectorXd alpha_vec = get_eigen_vectorxd_from_json_vector(parsed_json["alpha"].array_items());
+    if(angle_mode_degree)
+        alpha_vec = deg2rad(alpha_vec);
+    //Joint Types
+    VectorXi joint_types = get_eigen_vectorxi_from_json_vector(parsed_json["joint_types"].array_items());
+
+    MatrixXd dh_matrix(5,theta_vec.size());
+    dh_matrix << theta_vec.transpose(),
+            d_vec.transpose(),
+            a_vec.transpose(),
+            alpha_vec.transpose(),
+            joint_types.cast<double>().transpose();
+
+    //LOWER LIMIT
+    VectorXd lower_vec = get_eigen_vectorxd_from_json_vector(parsed_json["lower_q_limit"].array_items());
+    if(angle_mode_degree)
+        lower_vec = deg2rad(lower_vec);
+    //UPPER LIMIT
+    VectorXd upper_vec = get_eigen_vectorxd_from_json_vector(parsed_json["upper_q_limit"].array_items());
+    if(angle_mode_degree)
+        upper_vec = deg2rad(upper_vec);
+
+    DQ_SerialManipulatorDH serial_manipulator_dh(dh_matrix);
+    serial_manipulator_dh.set_lower_q_limit(lower_vec);
+    serial_manipulator_dh.set_upper_q_limit(upper_vec);
+
+    return serial_manipulator_dh;
 }
 
 }
