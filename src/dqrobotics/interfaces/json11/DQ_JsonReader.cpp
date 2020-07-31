@@ -141,7 +141,7 @@ DQ_SerialManipulatorDH DQ_JsonReader::get_serial_manipulator_dh_from_json(const 
 
     //Type
     std::string type = parsed_json["type"].string_value();
-    if(type != "DQ_SerialManipulator")
+    if(type != "DQ_SerialManipulatorDH")
         throw std::runtime_error("get_serial_manipulator_from_json is only compatible with DQ_SerialManipulator and not " + type);
 
     //ANGLE MODE
