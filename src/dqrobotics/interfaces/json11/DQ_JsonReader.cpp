@@ -79,7 +79,7 @@ VectorXi get_eigen_vectorxi_from_json_vector(const std::vector<json11::Json>& js
     return eigen_vector;
 }
 
-DQ_SerialManipulator DQ_JsonReader::get_serial_manipulator_from_json(const std::string &file)
+DQ_SerialManipulator DQ_JsonReader::_get_serial_manipulator_from_json(const std::string &file)
 {
     json11::Json parsed_json = parse_json(file);
 
@@ -135,7 +135,7 @@ DQ_SerialManipulator DQ_JsonReader::get_serial_manipulator_from_json(const std::
     return serial_manipulator;
 }
 
-DQ_SerialManipulatorDH DQ_JsonReader::get_serial_manipulator_dh_from_json(const std::string &file)
+DQ_SerialManipulatorDH DQ_JsonReader::_get_serial_manipulator_dh_from_json(const std::string &file)
 {
     json11::Json parsed_json = parse_json(file);
 
@@ -206,13 +206,13 @@ T DQ_JsonReader::get_from_json(const std::string &)
 template <>
 DQ_SerialManipulator DQ_JsonReader::get_from_json<DQ_SerialManipulator>(const std::string& file)
 {
-    return get_serial_manipulator_from_json(file);
+    return _get_serial_manipulator_from_json(file);
 }
 
 template <>
 DQ_SerialManipulatorDH DQ_JsonReader::get_from_json<DQ_SerialManipulatorDH>(const std::string& file)
 {
-    return get_serial_manipulator_dh_from_json(file);
+    return _get_serial_manipulator_dh_from_json(file);
 }
 
 }
