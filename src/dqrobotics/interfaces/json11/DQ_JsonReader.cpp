@@ -194,4 +194,25 @@ DQ_SerialManipulatorDH DQ_JsonReader::get_serial_manipulator_dh_from_json(const 
     return serial_manipulator_dh;
 }
 
+template<typename T>
+T DQ_JsonReader::get_from_json(const std::string &)
+{
+    throw std::runtime_error("get_from_json not defined for chosen type.\n"
+                             "It is currently defined for:\n"
+                             "DQ_SerialKinematics\n"
+                             "DQ_SerialKinematicsDH\n");
+}
+
+template <>
+DQ_SerialManipulator DQ_JsonReader::get_from_json<DQ_SerialManipulator>(const std::string& file)
+{
+    return get_serial_manipulator_from_json(file);
+}
+
+template <>
+DQ_SerialManipulatorDH DQ_JsonReader::get_from_json<DQ_SerialManipulatorDH>(const std::string& file)
+{
+    return get_serial_manipulator_dh_from_json(file);
+}
+
 }

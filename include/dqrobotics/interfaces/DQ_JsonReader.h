@@ -28,9 +28,13 @@ namespace DQ_robotics
 
 class DQ_JsonReader
 {
+private:
+    static DQ_SerialManipulator _get_serial_manipulator_from_json(const std::string& file);
+    static DQ_SerialManipulatorDH _get_serial_manipulator_dh_from_json(const std::string& file);
 public:
-    static DQ_SerialManipulator get_serial_manipulator_from_json(const std::string& file);
-    static DQ_SerialManipulatorDH get_serial_manipulator_dh_from_json(const std::string& file);
+    template <typename T>
+    static T get_from_json(const std::string& file);
 };
+
 
 }
