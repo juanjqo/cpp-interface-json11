@@ -174,14 +174,24 @@ DQ_SerialManipulatorDH DQ_JsonReader::_get_serial_manipulator_dh_from_json(const
     VectorXd lower_vec = get_eigen_vectorxd_from_json_vector(parsed_json["lower_q_limit"].array_items());
     if(angle_mode_degree)
         lower_vec = deg2rad(lower_vec);
+    //LOWER DOT LIMIT
+    VectorXd lower_dot_vec = get_eigen_vectorxd_from_json_vector(parsed_json["lower_q_dot_limit"].array_items());
+    if(angle_mode_degree)
+        lower_dot_vec = deg2rad(lower_dot_vec);
     //UPPER LIMIT
     VectorXd upper_vec = get_eigen_vectorxd_from_json_vector(parsed_json["upper_q_limit"].array_items());
     if(angle_mode_degree)
         upper_vec = deg2rad(upper_vec);
+    //UPPER DOT LIMIT
+    VectorXd upper_dot_vec = get_eigen_vectorxd_from_json_vector(parsed_json["upper_q_dot_limit"].array_items());
+    if(angle_mode_degree)
+        upper_dot_vec = deg2rad(upper_dot_vec);
 
     DQ_SerialManipulatorDH serial_manipulator_dh(dh_matrix);
     serial_manipulator_dh.set_lower_q_limit(lower_vec);
+    serial_manipulator_dh.set_lower_q_dot_limit(lower_dot_vec);
     serial_manipulator_dh.set_upper_q_limit(upper_vec);
+    serial_manipulator_dh.set_upper_q_dot_limit(upper_dot_vec);
 
     return serial_manipulator_dh;
 }
