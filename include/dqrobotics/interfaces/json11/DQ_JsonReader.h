@@ -20,7 +20,6 @@ Contributors:
 - Murilo M. Marinho        (murilo@nml.t.u-tokyo.ac.jp)
 */
 
-#include <dqrobotics/robot_modeling/DQ_SerialManipulator.h>
 #include <dqrobotics/robot_modeling/DQ_SerialManipulatorDH.h>
 
 namespace DQ_robotics
