@@ -2,7 +2,13 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 PROJECT(dqrobotics-interface-json11)
 set (CMAKE_CXX_STANDARD 11)
 
-#ADD_DEFINITIONS(-g -O2 -Wall)
+if(APPLE)
+        include_directories(
+        /usr/local/include/
+        /usr/local/include/eigen3
+        )
+endif()
+
 FIND_PACKAGE(Eigen3 REQUIRED)
 
 INCLUDE_DIRECTORIES(EIGEN3_INCLUDE_DIR)
@@ -14,15 +20,16 @@ INCLUDE_DIRECTORIES(${PROJECT_NAME} cpp/include)
 # DEFINE AND INSTALL LIBRARY AND INCLUDE FOLDER
 ################################################################
 
-#add_executable(load_dq_serial_manipulatordh
-#    examples/load_dq_serial_manipulatordh.cpp
-#
+#add_executable(json_read_example
+#    examples/json_read_example.cpp
+
 #    cpp/src/DQ.cpp
 #    cpp/src/robot_modeling/DQ_Kinematics.cpp
 #    cpp/src/robot_modeling/DQ_SerialManipulator.cpp
 #    cpp/src/robot_modeling/DQ_SerialManipulatorDH.cpp
+#    cpp/src/robot_modeling/DQ_SerialManipulatorDenso.cpp
 #    cpp/src/utils/DQ_Math.cpp
-#
+
 #    src/dqrobotics/interfaces/json11/DQ_JsonReader.cpp
 #    dropbox/json11/json11.cpp
 #    )
