@@ -71,6 +71,65 @@ VectorXi get_eigen_vectorxi_from_json_vector(const std::vector<json11::Json>& js
     return eigen_vector;
 }
 
+DQ get_unit_dq_from_json_vector(const std::vector<json11::Json>& json_vector)
+{
+    const DQ unit_dq(get_eigen_vectorxd_from_json_vector(json_vector));
+    const DQ one(1);
+    //Check if the DQ is almost unit
+    for(int i=0;i<8;i++)
+    {
+        if(fabs(one.q(i)-unit_dq.q(i))>DQ_threshold*2.0)
+        {
+            throw std::runtime_error("DQ_JsonReader::get_unit_dq_from_json_vector::DQ not almost unit ("+std::to_string(DQ_threshold*2.0)+").");
+        }
+    }
+    //If not already unit, normalize it
+    if(!is_unit(unit_dq))
+        return normalize(unit_dq);
+
+    return unit_dq;
+}
+
+void initialize_kinematics_commons(DQ_Kinematics* kinematics,
+                                   const json11::Json& parsed_json)
+{
+    //Reference frame
+    DQ reference_frame(get_unit_dq_from_json_vector(parsed_json["reference_frame"].array_items()));
+
+    kinematics->set_reference_frame(reference_frame);
+}
+
+void initialize_serial_manipulator_commons(DQ_SerialManipulator* serial_manipulator,
+                                           const json11::Json& parsed_json,
+                                           const bool& angle_mode_degree)
+{
+    //LOWER LIMIT
+    VectorXd lower_vec = get_eigen_vectorxd_from_json_vector(parsed_json["lower_q_limit"].array_items());
+    if(angle_mode_degree)
+        lower_vec = deg2rad(lower_vec);
+    //LOWER DOT LIMIT
+    VectorXd lower_dot_vec = get_eigen_vectorxd_from_json_vector(parsed_json["lower_q_dot_limit"].array_items());
+    if(angle_mode_degree)
+        lower_dot_vec = deg2rad(lower_dot_vec);
+    //UPPER LIMIT
+    VectorXd upper_vec = get_eigen_vectorxd_from_json_vector(parsed_json["upper_q_limit"].array_items());
+    if(angle_mode_degree)
+        upper_vec = deg2rad(upper_vec);
+    //UPPER DOT LIMIT
+    VectorXd upper_dot_vec = get_eigen_vectorxd_from_json_vector(parsed_json["upper_q_dot_limit"].array_items());
+    if(angle_mode_degree)
+        upper_dot_vec = deg2rad(upper_dot_vec);
+
+    //End effector
+    DQ effector(get_unit_dq_from_json_vector(parsed_json["effector"].array_items()));
+
+    serial_manipulator->set_lower_q_limit(lower_vec);
+    serial_manipulator->set_lower_q_dot_limit(lower_dot_vec);
+    serial_manipulator->set_upper_q_limit(upper_vec);
+    serial_manipulator->set_upper_q_dot_limit(upper_dot_vec);
+    serial_manipulator->set_effector(effector);
+}
+
 DQ_SerialManipulatorDH DQ_JsonReader::_get_serial_manipulator_dh_from_json(const std::string &file)
 {
     json11::Json parsed_json = parse_json(file);
@@ -114,28 +173,10 @@ DQ_SerialManipulatorDH DQ_JsonReader::_get_serial_manipulator_dh_from_json(const
             alpha_vec.transpose(),
             joint_types.cast<double>().transpose();
 
-    //LOWER LIMIT
-    VectorXd lower_vec = get_eigen_vectorxd_from_json_vector(parsed_json["lower_q_limit"].array_items());
-    if(angle_mode_degree)
-        lower_vec = deg2rad(lower_vec);
-    //LOWER DOT LIMIT
-    VectorXd lower_dot_vec = get_eigen_vectorxd_from_json_vector(parsed_json["lower_q_dot_limit"].array_items());
-    if(angle_mode_degree)
-        lower_dot_vec = deg2rad(lower_dot_vec);
-    //UPPER LIMIT
-    VectorXd upper_vec = get_eigen_vectorxd_from_json_vector(parsed_json["upper_q_limit"].array_items());
-    if(angle_mode_degree)
-        upper_vec = deg2rad(upper_vec);
-    //UPPER DOT LIMIT
-    VectorXd upper_dot_vec = get_eigen_vectorxd_from_json_vector(parsed_json["upper_q_dot_limit"].array_items());
-    if(angle_mode_degree)
-        upper_dot_vec = deg2rad(upper_dot_vec);
-
     DQ_SerialManipulatorDH serial_manipulator_dh(dh_matrix);
-    serial_manipulator_dh.set_lower_q_limit(lower_vec);
-    serial_manipulator_dh.set_lower_q_dot_limit(lower_dot_vec);
-    serial_manipulator_dh.set_upper_q_limit(upper_vec);
-    serial_manipulator_dh.set_upper_q_dot_limit(upper_dot_vec);
+    initialize_serial_manipulator_commons(static_cast<DQ_SerialManipulator*>(&serial_manipulator_dh),
+                                          parsed_json,
+                                          angle_mode_degree);
 
     return serial_manipulator_dh;
 }
@@ -188,28 +229,10 @@ DQ_SerialManipulatorDenso DQ_JsonReader::_get_serial_manipulator_denso_from_json
             beta_vec.transpose(),
             gamma_vec.transpose();
 
-    //LOWER LIMIT
-    VectorXd lower_vec = get_eigen_vectorxd_from_json_vector(parsed_json["lower_q_limit"].array_items());
-    if(angle_mode_degree)
-        lower_vec = deg2rad(lower_vec);
-    //LOWER DOT LIMIT
-    VectorXd lower_dot_vec = get_eigen_vectorxd_from_json_vector(parsed_json["lower_q_dot_limit"].array_items());
-    if(angle_mode_degree)
-        lower_dot_vec = deg2rad(lower_dot_vec);
-    //UPPER LIMIT
-    VectorXd upper_vec = get_eigen_vectorxd_from_json_vector(parsed_json["upper_q_limit"].array_items());
-    if(angle_mode_degree)
-        upper_vec = deg2rad(upper_vec);
-    //UPPER DOT LIMIT
-    VectorXd upper_dot_vec = get_eigen_vectorxd_from_json_vector(parsed_json["upper_q_dot_limit"].array_items());
-    if(angle_mode_degree)
-        upper_dot_vec = deg2rad(upper_dot_vec);
-
     DQ_SerialManipulatorDenso serial_manipulator_denso(denso_matrix);
-    serial_manipulator_denso.set_lower_q_limit(lower_vec);
-    serial_manipulator_denso.set_lower_q_dot_limit(lower_dot_vec);
-    serial_manipulator_denso.set_upper_q_limit(upper_vec);
-    serial_manipulator_denso.set_upper_q_dot_limit(upper_dot_vec);
+    initialize_serial_manipulator_commons(static_cast<DQ_SerialManipulator*>(&serial_manipulator_denso),
+                                          parsed_json,
+                                          angle_mode_degree);
 
     return serial_manipulator_denso;
 }
