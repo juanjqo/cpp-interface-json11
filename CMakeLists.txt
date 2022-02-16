@@ -20,20 +20,6 @@ INCLUDE_DIRECTORIES(${PROJECT_NAME} cpp/include)
 # DEFINE AND INSTALL LIBRARY AND INCLUDE FOLDER
 ################################################################
 
-#add_executable(json_read_example
-#    examples/json_read_example.cpp
-
-#    cpp/src/DQ.cpp
-#    cpp/src/robot_modeling/DQ_Kinematics.cpp
-#    cpp/src/robot_modeling/DQ_SerialManipulator.cpp
-#    cpp/src/robot_modeling/DQ_SerialManipulatorDH.cpp
-#    cpp/src/robot_modeling/DQ_SerialManipulatorDenso.cpp
-#    cpp/src/utils/DQ_Math.cpp
-
-#    src/dqrobotics/interfaces/json11/DQ_JsonReader.cpp
-#    dropbox/json11/json11.cpp
-#    )
-
 ADD_LIBRARY(${PROJECT_NAME} SHARED
     src/dqrobotics/interfaces/json11/DQ_JsonReader.cpp
     dropbox/json11/json11.cpp
