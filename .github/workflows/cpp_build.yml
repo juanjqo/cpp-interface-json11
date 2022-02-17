@@ -38,3 +38,9 @@ jobs:
           fakeroot debian/rules binary
           cd ..
           sudo apt install ./*.deb
+          
+      - name: Build and run example
+        run: |
+          cd cpp-examples
+          chmod +x .build_json11.sh
+          ./.build_json11.sh
