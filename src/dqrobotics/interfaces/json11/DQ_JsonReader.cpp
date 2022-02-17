@@ -120,6 +120,14 @@ void initialize_serial_manipulator_commons(DQ_SerialManipulator* serial_manipula
     if(angle_mode_degree)
         upper_dot_vec = deg2rad(upper_dot_vec);
 
+    for(const auto& vector : {lower_vec, lower_dot_vec, upper_vec, upper_dot_vec})
+    {
+        if(serial_manipulator->get_dim_configuration_space()!=vector.size())
+        {
+            throw std::runtime_error("Incompatible vector sizes in json file for a DQ_SerialManipulator.");
+        }
+    }
+
     //End effector
     DQ effector(get_unit_dq_from_json_vector(parsed_json["effector"].array_items()));
 
@@ -135,7 +143,7 @@ DQ_SerialManipulatorDH DQ_JsonReader::_get_serial_manipulator_dh_from_json(const
     json11::Json parsed_json = parse_json(file);
 
     //Type
-    std::string type = parsed_json["type"].string_value();
+    std::string type = parsed_json["robot_type"].string_value();
     if(type != "DQ_SerialManipulatorDH")
         throw std::runtime_error("_get_serial_manipulator_dh_from_json not compatible with " + type);
 
@@ -148,8 +156,6 @@ DQ_SerialManipulatorDH DQ_JsonReader::_get_serial_manipulator_dh_from_json(const
         angle_mode_degree = false;
     else
         throw std::runtime_error("Unable to decode angle_mode");
-
-    std::string convention = parsed_json["convention"].string_value();
 
     //THETA
     VectorXd theta_vec = get_eigen_vectorxd_from_json_vector(parsed_json["theta"].array_items());
@@ -164,14 +170,22 @@ DQ_SerialManipulatorDH DQ_JsonReader::_get_serial_manipulator_dh_from_json(const
     if(angle_mode_degree)
         alpha_vec = deg2rad(alpha_vec);
     //Joint Types
-    VectorXi joint_types = get_eigen_vectorxi_from_json_vector(parsed_json["joint_types"].array_items());
+    VectorXi types = get_eigen_vectorxi_from_json_vector(parsed_json["types"].array_items());
+
+    for(const auto& vector : {theta_vec, d_vec, a_vec, alpha_vec})
+    {
+        if(types.size()!=vector.size())
+        {
+            throw std::runtime_error("Incompatible vector sizes in json file for a DQ_SerialManipulatorDH.");
+        }
+    }
 
     MatrixXd dh_matrix(5,theta_vec.size());
     dh_matrix << theta_vec.transpose(),
             d_vec.transpose(),
             a_vec.transpose(),
             alpha_vec.transpose(),
-            joint_types.cast<double>().transpose();
+            types.cast<double>().transpose();
 
     DQ_SerialManipulatorDH serial_manipulator_dh(dh_matrix);
     initialize_serial_manipulator_commons(static_cast<DQ_SerialManipulator*>(&serial_manipulator_dh),
@@ -186,7 +200,7 @@ DQ_SerialManipulatorDenso DQ_JsonReader::_get_serial_manipulator_denso_from_json
     json11::Json parsed_json = parse_json(file);
 
     //Type
-    std::string type = parsed_json["type"].string_value();
+    std::string type = parsed_json["robot_type"].string_value();
     if(type != "DQ_SerialManipulatorDenso")
         throw std::runtime_error("_get_serial_manipulator_denso_from_json not compatible with " + type);
 
@@ -218,8 +232,14 @@ DQ_SerialManipulatorDenso DQ_JsonReader::_get_serial_manipulator_denso_from_json
     VectorXd gamma_vec = get_eigen_vectorxd_from_json_vector(parsed_json["gamma"].array_items());
     if(angle_mode_degree)
         gamma_vec = deg2rad(gamma_vec);
-    //Joint Types
-    VectorXi joint_types = get_eigen_vectorxi_from_json_vector(parsed_json["joint_types"].array_items());
+
+    for(const auto& vector : {b_vec, d_vec, alpha_vec, beta_vec, gamma_vec})
+    {
+        if(a_vec.size()!=vector.size())
+        {
+            throw std::runtime_error("Incompatible vector sizes in json file for a DQ_SerialManipulatorDenso.");
+        }
+    }
 
     MatrixXd denso_matrix(6,a_vec.size());
     denso_matrix << a_vec.transpose(),
