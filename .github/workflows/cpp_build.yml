@@ -39,6 +39,9 @@ jobs:
           cd ..
           sudo apt install ./*.deb
           
+      - name: Clone cpp-examples
+        run: git clone https://github.com/dqrobotics/cpp-examples.git
+          
       - name: Build and run example
         run: |
           cd cpp-examples
