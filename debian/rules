@@ -6,9 +6,6 @@ BUILDDIR = build_dir
 build:
 ifeq ($(CI),)
 	echo "Not CI, hopefully launchpad. Clonning submodules manually..."
-	BRANCH = $(shell git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
-	echo "Detected branch $(BRANCH)"
-	git clone --single-branch --branch $(BRANCH) https://git.launchpad.net/~dqrobotics-dev/dqrobotics/+git/cpp cpp
 	rm -rf dropbox/{*,.*}
 	rm -rf dropbox
 	mkdir -p dropbox/json11
