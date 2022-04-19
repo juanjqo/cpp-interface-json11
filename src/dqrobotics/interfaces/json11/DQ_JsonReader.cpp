@@ -136,6 +136,10 @@ void initialize_serial_manipulator_commons(DQ_SerialManipulator* serial_manipula
     serial_manipulator->set_upper_q_limit(upper_vec);
     serial_manipulator->set_upper_q_dot_limit(upper_dot_vec);
     serial_manipulator->set_effector(effector);
+    
+    //DQ_Kinematics commons
+    initialize_kinematics_commons(static_cast<DQ_SerialManipulator*>(&serial_manipulator_dh),
+                                          parsed_json);
 }
 
 DQ_SerialManipulatorDH DQ_JsonReader::_get_serial_manipulator_dh_from_json(const std::string &file)
