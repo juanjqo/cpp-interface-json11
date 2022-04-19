@@ -73,21 +73,21 @@ VectorXi get_eigen_vectorxi_from_json_vector(const std::vector<json11::Json>& js
 
 DQ get_unit_dq_from_json_vector(const std::vector<json11::Json>& json_vector)
 {
-    const DQ unit_dq(get_eigen_vectorxd_from_json_vector(json_vector));
-    const DQ one(1);
+    const DQ json_dq(get_eigen_vectorxd_from_json_vector(json_vector));
+    const DQ normalized_dq = normalize(json_dq);
     //Check if the DQ is almost unit
     for(int i=0;i<8;i++)
     {
-        if(fabs(one.q(i)-unit_dq.q(i))>DQ_threshold*2.0)
+        if(fabs(normalized_dq.q(i)-json_dq.q(i))>DQ_threshold*2.0)
         {
             throw std::runtime_error("DQ_JsonReader::get_unit_dq_from_json_vector::DQ not almost unit ("+std::to_string(DQ_threshold*2.0)+").");
         }
     }
     //If not already unit, normalize it
-    if(!is_unit(unit_dq))
-        return normalize(unit_dq);
+    if(!is_unit(json_dq))
+        return normalized_dq;
 
-    return unit_dq;
+    return json_dq;
 }
 
 void initialize_kinematics_commons(DQ_Kinematics* kinematics,
