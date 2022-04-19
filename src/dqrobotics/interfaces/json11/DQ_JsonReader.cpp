@@ -138,7 +138,7 @@ void initialize_serial_manipulator_commons(DQ_SerialManipulator* serial_manipula
     serial_manipulator->set_effector(effector);
     
     //DQ_Kinematics commons
-    initialize_kinematics_commons(static_cast<DQ_SerialManipulator*>(&serial_manipulator_dh),
+    initialize_kinematics_commons(static_cast<DQ_Kinematics*>(serial_manipulator),
                                           parsed_json);
 }
 
