@@ -35,7 +35,7 @@ Contributors:
 namespace DQ_robotics
 {
 
-json11::Json parse_json(const std::string& file)
+static json11::Json parse_json(const std::string& file)
 {
     std::string error;
     std::ifstream f(file); //taking file as inputstream
@@ -51,27 +51,27 @@ json11::Json parse_json(const std::string& file)
     return parsed_json;
 }
 
-VectorXd get_eigen_vectorxd_from_json_vector(const std::vector<json11::Json>& json_vector)
+static VectorXd get_eigen_vectorxd_from_json_vector(const std::vector<json11::Json>& json_vector)
 {
     VectorXd eigen_vector(json_vector.size());
-    for(int i=0;i<json_vector.size();i++)
+    for(unsigned long i=0;i<json_vector.size();i++)
     {
         eigen_vector(i) = json_vector[i].number_value();
     }
     return eigen_vector;
 }
 
-VectorXi get_eigen_vectorxi_from_json_vector(const std::vector<json11::Json>& json_vector)
+static VectorXi get_eigen_vectorxi_from_json_vector(const std::vector<json11::Json>& json_vector)
 {
     VectorXi eigen_vector(json_vector.size());
-    for(int i=0;i<json_vector.size();i++)
+    for(unsigned long i=0;i<json_vector.size();i++)
     {
         eigen_vector(i) = json_vector[i].int_value();
     }
     return eigen_vector;
 }
 
-DQ get_unit_dq_from_json_vector(const std::vector<json11::Json>& json_vector)
+static DQ get_unit_dq_from_json_vector(const std::vector<json11::Json>& json_vector)
 {
     const DQ json_dq(get_eigen_vectorxd_from_json_vector(json_vector));
     const DQ normalized_dq = normalize(json_dq);
@@ -90,7 +90,7 @@ DQ get_unit_dq_from_json_vector(const std::vector<json11::Json>& json_vector)
     return json_dq;
 }
 
-void initialize_kinematics_commons(DQ_Kinematics* kinematics,
+static void initialize_kinematics_commons(DQ_Kinematics* kinematics,
                                    const json11::Json& parsed_json)
 {
     //Reference frame
@@ -99,26 +99,45 @@ void initialize_kinematics_commons(DQ_Kinematics* kinematics,
     kinematics->set_reference_frame(reference_frame);
 }
 
-void initialize_serial_manipulator_commons(DQ_SerialManipulator* serial_manipulator,
+static VectorXd deg2rad_with_mask(const VectorXd& v, const VectorXi& mask=VectorXi())
+{
+    if(mask.size() == 0)
+    {
+        return v;
+    }
+    if(v.size()!=mask.size())
+        throw std::runtime_error("DQ_JsonReader::deg2rad_with_mask::Invalid mask size.");
+
+    VectorXd v_with_mask(v);
+    for(int i=0;i<v.size();i++)
+    {
+        if(mask(i)==0)
+            v_with_mask(i)=deg2rad(v(i));
+    }
+    return v_with_mask;
+}
+
+static void initialize_serial_manipulator_commons(DQ_SerialManipulator* serial_manipulator,
                                            const json11::Json& parsed_json,
-                                           const bool& angle_mode_degree)
+                                           const bool& angle_mode_degree,
+                                           const VectorXi& angle_mask=VectorXi())
 {
     //LOWER LIMIT
     VectorXd lower_vec = get_eigen_vectorxd_from_json_vector(parsed_json["lower_q_limit"].array_items());
     if(angle_mode_degree)
-        lower_vec = deg2rad(lower_vec);
+        lower_vec = deg2rad_with_mask(lower_vec,angle_mask);
     //LOWER DOT LIMIT
     VectorXd lower_dot_vec = get_eigen_vectorxd_from_json_vector(parsed_json["lower_q_dot_limit"].array_items());
     if(angle_mode_degree)
-        lower_dot_vec = deg2rad(lower_dot_vec);
+        lower_dot_vec = deg2rad_with_mask(lower_dot_vec,angle_mask);
     //UPPER LIMIT
     VectorXd upper_vec = get_eigen_vectorxd_from_json_vector(parsed_json["upper_q_limit"].array_items());
     if(angle_mode_degree)
-        upper_vec = deg2rad(upper_vec);
+        upper_vec = deg2rad_with_mask(upper_vec,angle_mask);
     //UPPER DOT LIMIT
     VectorXd upper_dot_vec = get_eigen_vectorxd_from_json_vector(parsed_json["upper_q_dot_limit"].array_items());
     if(angle_mode_degree)
-        upper_dot_vec = deg2rad(upper_dot_vec);
+        upper_dot_vec = deg2rad_with_mask(upper_dot_vec,angle_mask);
 
     for(const auto& vector : {lower_vec, lower_dot_vec, upper_vec, upper_dot_vec})
     {
@@ -194,7 +213,8 @@ DQ_SerialManipulatorDH DQ_JsonReader::_get_serial_manipulator_dh_from_json(const
     DQ_SerialManipulatorDH serial_manipulator_dh(dh_matrix);
     initialize_serial_manipulator_commons(static_cast<DQ_SerialManipulator*>(&serial_manipulator_dh),
                                           parsed_json,
-                                          angle_mode_degree);
+                                          angle_mode_degree,
+                                          types);
 
     return serial_manipulator_dh;
 }
