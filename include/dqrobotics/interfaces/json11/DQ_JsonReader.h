@@ -18,7 +18,7 @@ This file is part of DQ Robotics.
     along with DQ Robotics.  If not, see <http://www.gnu.org/licenses/>.
 
 Contributors:
-- Murilo M. Marinho        (murilo@nml.t.u-tokyo.ac.jp)
+- Murilo M. Marinho        (murilo@g.ecc.u-tokyo.ac.jp)
 */
 
 #include <dqrobotics/robot_modeling/DQ_SerialManipulatorDH.h>
