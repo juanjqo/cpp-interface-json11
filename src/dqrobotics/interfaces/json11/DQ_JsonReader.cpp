@@ -1,5 +1,5 @@
 /**
-(C) Copyright 2019-2022 DQ Robotics Developers
+(C) Copyright 2019-2023 DQ Robotics Developers
 
 This file is part of DQ Robotics.
 
@@ -99,12 +99,8 @@ static void initialize_kinematics_commons(DQ_Kinematics* kinematics,
     kinematics->set_reference_frame(reference_frame);
 }
 
-static VectorXd deg2rad_with_mask(const VectorXd& v, const VectorXi& mask=VectorXi())
+static VectorXd deg2rad_with_mask(const VectorXd& v, const VectorXi& mask)
 {
-    if(mask.size() == 0)
-    {
-        return v;
-    }
     if(v.size()!=mask.size())
         throw std::runtime_error("DQ_JsonReader::deg2rad_with_mask::Invalid mask size.");
 
@@ -120,7 +116,7 @@ static VectorXd deg2rad_with_mask(const VectorXd& v, const VectorXi& mask=Vector
 static void initialize_serial_manipulator_commons(DQ_SerialManipulator* serial_manipulator,
                                            const json11::Json& parsed_json,
                                            const bool& angle_mode_degree,
-                                           const VectorXi& angle_mask=VectorXi())
+                                           const VectorXi& angle_mask)
 {
     //LOWER LIMIT
     VectorXd lower_vec = get_eigen_vectorxd_from_json_vector(parsed_json["lower_q_limit"].array_items());
@@ -276,7 +272,8 @@ DQ_SerialManipulatorDenso DQ_JsonReader::_get_serial_manipulator_denso_from_json
     DQ_SerialManipulatorDenso serial_manipulator_denso(denso_matrix);
     initialize_serial_manipulator_commons(static_cast<DQ_SerialManipulator*>(&serial_manipulator_denso),
                                           parsed_json,
-                                          angle_mode_degree);
+                                          angle_mode_degree,
+                                          VectorXi::Zero(a_vec.size()));
 
     return serial_manipulator_denso;
 }
