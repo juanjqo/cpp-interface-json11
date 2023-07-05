@@ -23,6 +23,7 @@ Contributors:
 
 #include <dqrobotics/robot_modeling/DQ_SerialManipulatorDH.h>
 #include <dqrobotics/robot_modeling/DQ_SerialManipulatorDenso.h>
+#include <dqrobotics/robot_modeling/DQ_SerialManipulatorMDH.h>
 
 namespace DQ_robotics
 {
@@ -31,6 +32,7 @@ class DQ_JsonReader
 {
 private:
     static DQ_SerialManipulatorDH _get_serial_manipulator_dh_from_json(const std::string& file);
+    static DQ_SerialManipulatorMDH _get_serial_manipulator_mdh_from_json(const std::string& file);
     static DQ_SerialManipulatorDenso _get_serial_manipulator_denso_from_json(const std::string& file);
 public:
     template <typename T>

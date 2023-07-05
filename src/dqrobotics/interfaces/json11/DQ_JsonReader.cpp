@@ -91,7 +91,7 @@ static DQ get_unit_dq_from_json_vector(const std::vector<json11::Json>& json_vec
 }
 
 static void initialize_kinematics_commons(DQ_Kinematics* kinematics,
-                                   const json11::Json& parsed_json)
+                                          const json11::Json& parsed_json)
 {
     //Reference frame
     DQ reference_frame(get_unit_dq_from_json_vector(parsed_json["reference_frame"].array_items()));
@@ -114,9 +114,9 @@ static VectorXd deg2rad_with_mask(const VectorXd& v, const VectorXi& mask)
 }
 
 static void initialize_serial_manipulator_commons(DQ_SerialManipulator* serial_manipulator,
-                                           const json11::Json& parsed_json,
-                                           const bool& angle_mode_degree,
-                                           const VectorXi& angle_mask)
+                                                  const json11::Json& parsed_json,
+                                                  const bool& angle_mode_degree,
+                                                  const VectorXi& angle_mask)
 {
     //LOWER LIMIT
     VectorXd lower_vec = get_eigen_vectorxd_from_json_vector(parsed_json["lower_q_limit"].array_items());
@@ -151,10 +151,10 @@ static void initialize_serial_manipulator_commons(DQ_SerialManipulator* serial_m
     serial_manipulator->set_upper_q_limit(upper_vec);
     serial_manipulator->set_upper_q_dot_limit(upper_dot_vec);
     serial_manipulator->set_effector(effector);
-    
+
     //DQ_Kinematics commons
     initialize_kinematics_commons(static_cast<DQ_Kinematics*>(serial_manipulator),
-                                          parsed_json);
+                                  parsed_json);
 }
 
 DQ_SerialManipulatorDH DQ_JsonReader::_get_serial_manipulator_dh_from_json(const std::string &file)
@@ -201,10 +201,10 @@ DQ_SerialManipulatorDH DQ_JsonReader::_get_serial_manipulator_dh_from_json(const
 
     MatrixXd dh_matrix(5,theta_vec.size());
     dh_matrix << theta_vec.transpose(),
-            d_vec.transpose(),
-            a_vec.transpose(),
-            alpha_vec.transpose(),
-            types.cast<double>().transpose();
+        d_vec.transpose(),
+        a_vec.transpose(),
+        alpha_vec.transpose(),
+        types.cast<double>().transpose();
 
     DQ_SerialManipulatorDH serial_manipulator_dh(dh_matrix);
     initialize_serial_manipulator_commons(static_cast<DQ_SerialManipulator*>(&serial_manipulator_dh),
@@ -213,6 +213,69 @@ DQ_SerialManipulatorDH DQ_JsonReader::_get_serial_manipulator_dh_from_json(const
                                           types);
 
     return serial_manipulator_dh;
+}
+
+/**
+ * @brief DQ_JsonReader::_get_serial_manipulator_mdh_from_json
+ * @param file
+ * @return
+ */
+DQ_SerialManipulatorMDH DQ_JsonReader::_get_serial_manipulator_mdh_from_json(const std::string &file)
+{
+    json11::Json parsed_json = parse_json(file);
+
+    //Type
+    std::string type = parsed_json["robot_type"].string_value();
+    if(type != "DQ_SerialManipulatorMDH")
+        throw std::runtime_error("_get_serial_manipulator_mdh_from_json not compatible with " + type);
+
+    //ANGLE MODE
+    std::string angle_mode_str = parsed_json["angle_mode"].string_value();
+    bool angle_mode_degree;
+    if(angle_mode_str == "degree")
+        angle_mode_degree = true;
+    else if(angle_mode_str == "rad")
+        angle_mode_degree = false;
+    else
+        throw std::runtime_error("Unable to decode angle_mode");
+
+    //THETA
+    VectorXd theta_vec = get_eigen_vectorxd_from_json_vector(parsed_json["theta"].array_items());
+    if(angle_mode_degree)
+        theta_vec = deg2rad(theta_vec);
+    //D
+    VectorXd d_vec = get_eigen_vectorxd_from_json_vector(parsed_json["d"].array_items());
+    //A
+    VectorXd a_vec = get_eigen_vectorxd_from_json_vector(parsed_json["a"].array_items());
+    //ALPHA
+    VectorXd alpha_vec = get_eigen_vectorxd_from_json_vector(parsed_json["alpha"].array_items());
+    if(angle_mode_degree)
+        alpha_vec = deg2rad(alpha_vec);
+    //Joint Types
+    VectorXi types = get_eigen_vectorxi_from_json_vector(parsed_json["types"].array_items());
+
+    for(const auto& vector : {theta_vec, d_vec, a_vec, alpha_vec})
+    {
+        if(types.size()!=vector.size())
+        {
+            throw std::runtime_error("Incompatible vector sizes in json file for a DQ_SerialManipulatorDH.");
+        }
+    }
+
+    MatrixXd mdh_matrix(5,theta_vec.size());
+    mdh_matrix << theta_vec.transpose(),
+        d_vec.transpose(),
+        a_vec.transpose(),
+        alpha_vec.transpose(),
+        types.cast<double>().transpose();
+
+    DQ_SerialManipulatorMDH serial_manipulator_mdh(mdh_matrix);
+    initialize_serial_manipulator_commons(static_cast<DQ_SerialManipulator*>(&serial_manipulator_mdh),
+                                          parsed_json,
+                                          angle_mode_degree,
+                                          types);
+
+    return serial_manipulator_mdh;
 }
 
 DQ_SerialManipulatorDenso DQ_JsonReader::_get_serial_manipulator_denso_from_json(const std::string &file)
@@ -263,11 +326,11 @@ DQ_SerialManipulatorDenso DQ_JsonReader::_get_serial_manipulator_denso_from_json
 
     MatrixXd denso_matrix(6,a_vec.size());
     denso_matrix << a_vec.transpose(),
-            b_vec.transpose(),
-            d_vec.transpose(),
-            alpha_vec.transpose(),
-            beta_vec.transpose(),
-            gamma_vec.transpose();
+        b_vec.transpose(),
+        d_vec.transpose(),
+        alpha_vec.transpose(),
+        beta_vec.transpose(),
+        gamma_vec.transpose();
 
     DQ_SerialManipulatorDenso serial_manipulator_denso(denso_matrix);
     initialize_serial_manipulator_commons(static_cast<DQ_SerialManipulator*>(&serial_manipulator_denso),
@@ -284,6 +347,7 @@ T DQ_JsonReader::get_from_json(const std::string &)
     throw std::runtime_error("get_from_json not defined for chosen type.\n"
                              "It is currently defined for:\n"
                              "DQ_SerialKinematicsDH\n"
+                             "DQ_SerialKinematicsMDH\n"
                              "DQ_SerialKinematicsDenso\n");
 }
 
@@ -299,4 +363,13 @@ DQ_SerialManipulatorDenso DQ_JsonReader::get_from_json<DQ_SerialManipulatorDenso
     return _get_serial_manipulator_denso_from_json(file);
 }
 
+
+
+template <>
+DQ_SerialManipulatorMDH DQ_JsonReader::get_from_json<DQ_SerialManipulatorMDH>(const std::string& file)
+{
+    return _get_serial_manipulator_mdh_from_json(file);
 }
+
+}
+
